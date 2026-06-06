@@ -1,0 +1,11 @@
+# H2 文件模式 Profile — 持久化数据，不依赖 MySQL
+spring:
+  datasource:
+    url: jdbc:h2:file:./data/installassistant;DB_CLOSE_DELAY=-1;MODE=MySQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database-platform: org.hibernate.dialect.H2Dialect

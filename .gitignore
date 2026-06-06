@@ -1,0 +1,44 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+!gradlew
+!gradlew.bat
+
+# IDE
+.idea/
+*.iml
+
+# AI assistant tool cache
+.reasonix/
+*.ipr
+*.iws
+.vscode/
+.project
+.classpath
+.settings/
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Environment
+.env
+
+# Runtime data
+data/
+
+# Docker volumes
+volumes/
+
+# Build artifacts
+out/
+target/
+bin/

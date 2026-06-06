@@ -1,0 +1,18 @@
+spring:
+  ai:
+    openai:
+      api-key: test-key
+      chat:
+        enabled: false
+      embedding:
+        enabled: false
+    vectorstore:
+      milvus:
+        initialize-schema: false
+
+langchain4j:
+  open-ai:
+    chat-model:
+      api-key: test-key
+      log-requests: false
+      log-responses: false

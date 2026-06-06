@@ -1,0 +1,14 @@
+// Gradle 全局初始化脚本 — 国内镜像加速
+allprojects {
+    buildscript {
+        repositories {
+            maven { url 'https://mirrors.cloud.tencent.com/nexus/repository/maven-public/' }
+            mavenCentral()
+        }
+    }
+    repositories {
+        maven { url 'https://mirrors.cloud.tencent.com/nexus/repository/maven-public/' }
+        mavenCentral()
+        maven { url 'https://repo.spring.io/milestone' }
+    }
+}

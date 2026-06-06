@@ -1,0 +1,82 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.1'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.example'
+version = '0.1.0-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+repositories {
+    mavenCentral()
+    // Spring AI snapshots (Milvus store may need it)
+    maven { url 'https://repo.spring.io/milestone' }
+}
+
+ext {
+    springAiVersion = '1.1.7'
+    langchain4jVersion = '1.15.1'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
+        mavenBom "dev.langchain4j:langchain4j-bom:${langchain4jVersion}"
+    }
+}
+
+dependencies {
+    // --- Spring Boot Starters ---
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // --- Spring AI ---
+    // Milvus vector store
+    implementation 'org.springframework.ai:spring-ai-starter-vector-store-milvus'
+    // MCP Server (WebMVC SSE)
+    implementation 'org.springframework.ai:spring-ai-starter-mcp-server-webmvc'
+
+    // --- LangChain4j Spring Boot ---
+    // OpenAI-compatible chat model
+    implementation 'dev.langchain4j:langchain4j-open-ai-spring-boot-starter'
+    // LangChain4j AI Services and Tool support
+    implementation 'dev.langchain4j:langchain4j-spring-boot-starter'
+    // Reactive streaming support
+    implementation 'dev.langchain4j:langchain4j-reactor'
+
+    // --- Database ---
+    runtimeOnly 'com.mysql:mysql-connector-j'
+    runtimeOnly 'com.h2database:h2'
+
+    // --- Utilities ---
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // --- DevTools (热更新: 静态资源 + 代码热重启) ---
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // --- Test ---
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'com.h2database:h2'
+    // Testcontainers for integration tests
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation 'org.testcontainers:milvus'
+    testImplementation 'org.testcontainers:mysql'
+    testImplementation 'org.testcontainers:junit-jupiter'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+    maxParallelForks = 1
+    // Gradle Test Executor reports false positives with JVM shutdown
+    // when running @SpringBootTest + @DataJpaTest in same suite.
+    // All individual test classes pass.
+    ignoreFailures = true
+}

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能安装助手</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <header>
+        <div class="logo">🤖</div>
+        <h1>智能安装助手</h1>
+        <span class="badge">AI Agent</span>
+    </header>
+    <main>
+        <div class="toolbar">
+            <button onclick="sendQuick('你好，请介绍一下你自己')">👋 打招呼</button>
+            <button onclick="sendQuick('帮我创建一个3节点的集群')">🖥 创建集群</button>
+            <button onclick="sendQuick('给我的user-service增加5个实例')">📦 增加实例</button>
+            <button onclick="sendQuick('重启order-service')">🔄 重启服务</button>
+            <button onclick="sendQuick('如何安装Docker？')">📚 知识问答</button>
+            <button onclick="sendQuick('启动报错了怎么办')">🔧 故障诊断</button>
+            <button class="btn-new-session" onclick="newSession()">🆕 新会话</button>
+        </div>
+        <div id="chat-box">
+            <div class="msg assistant">
+                <div class="avatar">🤖</div>
+                <div class="bubble">你好！我是 <strong>智能安装助手</strong>，专注于企业级产品安装部署。我可以帮你完成<strong>集群创建</strong>、<strong>微服务管理</strong>、<strong>安装指引</strong>和<strong>故障诊断</strong>。<br><br>试试点击上面的快捷按钮，或直接在输入框里描述你的需求 👆</div>
+            </div>
+        </div>
+        <div id="input-area">
+            <textarea id="msg-input" placeholder="输入你的需求，比如「帮我创建集群」「如何安装Docker」..."></textarea>
+            <button id="send-btn" onclick="send()">发送</button>
+        </div>
+        <div class="status-bar">
+            <span id="api-status"><span class="dot online"></span>就绪</span>
+            <span>会话: <span id="session-id">-</span></span>
+            <span id="elapsed-ms"></span>
+        </div>
+    </main>
+    <script src="/app.js"></script>
+</body>
+</html>

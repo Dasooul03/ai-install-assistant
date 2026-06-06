@@ -1,0 +1,88 @@
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+spring:
+  application:
+    name: ai-install-assistant
+  devtools:
+    restart:
+      enabled: true
+      exclude: static/**,public/**
+    livereload:
+      enabled: true
+
+  # --- MySQL 数据源 ---
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:install_assistant}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai&characterEncoding=utf8mb4
+    username: ${MYSQL_USERNAME:root}
+    password: ${MYSQL_PASSWORD:root123}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 300000
+
+  # --- JPA ---
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  # --- Spring AI ---
+  ai:
+    # Spring AI OpenAI 禁用 (聊天由 LangChain4j 处理, DeepSeek 不支持 Embedding)
+    openai:
+      chat:
+        enabled: false
+      embedding:
+        enabled: false
+
+    # Milvus vector store (暂无 Embedding 模型, disable schema init)
+    vectorstore:
+      milvus:
+        initialize-schema: false
+
+# --- LangChain4j ---
+langchain4j:
+  open-ai:
+    chat-model:
+      api-key: ${LLM_API_KEY}
+      base-url: ${LLM_BASE_URL:https://api.deepseek.com/v1}
+      model-name: ${LLM_MODEL_NAME:deepseek-chat}
+      temperature: 0.3
+      max-tokens: 2048
+      log-requests: true
+      log-responses: true
+    streaming-chat-model:
+      api-key: ${LLM_API_KEY}
+      base-url: ${LLM_BASE_URL:https://api.deepseek.com/v1}
+      model-name: ${LLM_MODEL_NAME:deepseek-chat}
+      temperature: 0.3
+      max-tokens: 2048
+
+# --- Actuator ---
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# --- Logging ---
+logging:
+  level:
+    root: ${LOG_LEVEL:INFO}
+    com.example.installassistant: DEBUG
+    org.springframework.ai: DEBUG
+    dev.langchain4j: DEBUG
