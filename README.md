@@ -7,14 +7,16 @@
   <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT License">
 </p>
 
-<h1 align="center">
-  🤖 AI Install Assistant<br>
-  <sub>智能安装助手</sub>
-</h1>
+<h1 align="center">🤖 AI Install Assistant</h1>
 
 <p align="center">
-  <strong>An enterprise-grade multi-agent platform for software installation, deployment, and operations.</strong><br>
-  <sub>面向企业级产品安装部署场景的 AI 多智能体平台</sub>
+  <strong>An enterprise-grade multi-agent AI platform for software installation, deployment, and operations.</strong>
+</p>
+
+<p align="center">
+  <a href="README.zh-CN.md">
+    <img src="https://img.shields.io/badge/lang-简体中文-red?style=flat-square" alt="中文版">
+  </a>
 </p>
 
 <p align="center">
@@ -23,7 +25,8 @@
   <a href="#-quick-start">Quick Start</a> ·
   <a href="#-api-reference">API</a> ·
   <a href="#-project-structure">Structure</a> ·
-  <a href="#-chinese">中文</a>
+  <a href="#-deployment">Deployment</a> ·
+  <a href="#-license">License</a>
 </p>
 
 ---
@@ -45,7 +48,7 @@
 The platform routes each user request through **8 intent types** to **4 specialized micro-agents**:
 
 ```
-KnowledgeQAAgent      → RAG retrieval + LLM generation
+KnowledgeQAAgent       → RAG retrieval + LLM generation
 InstallationGuideAgent → step-by-step installation walkthrough
 OperationAgent         → parse & execute operational commands
 DiagnosticAgent        → fault analysis & resolution advice
@@ -338,6 +341,8 @@ docker run -p 8080:8080 --env-file .env ai-install-assistant
 
 A pre-built base knowledge document (`base-knowledge.md`) is embedded in the JAR — the application works out-of-the-box even without Milvus or a MySQL connection.
 
+> ⚠️ **Security note**: The `.env` file is excluded from Git via `.gitignore`. Never hardcode API keys in `application.yml`.
+
 ---
 
 ## 📄 License
@@ -349,67 +354,3 @@ MIT © 2025 Dasooul03
 <p align="center">
   <sub>Made with ☕ and 🤖</sub>
 </p>
-
----
-
-<h2 id="-chinese" align="center">📝 中文说明</h2>
-
-## ✨ 核心能力
-
-| 能力 | 说明 |
-|---|---|
-| 📚 **知识问答** | RAG 检索增强生成，基于安装手册/配置指南/产品文档回答用户问题；Milvus 不可用时自动回退到内置知识库 |
-| 📖 **安装指引** | 分步骤引导完成产品安装部署流程 |
-| ⚙️ **自动化操作** | 创建集群、划分分区、增减实例、微服务启停 — 全通过 LLM 意图识别驱动 |
-| 🔧 **故障诊断** | 问题分析、根因推断、可操作的排查建议 |
-| 🔗 **MCP Server** | 通过 SSE 将运维操作暴露为 MCP 工具，外部 AI 客户端可直接调用 |
-| 🗂️ **知识库管理** | 上传文本/Markdown 文件，持久化到 MySQL 并可选索引到 Milvus |
-| 💬 **流式对话** | SSE 流式输出，支持会话管理和对话历史 |
-
-## 🧠 技术架构
-
-- **意图分类器**：基于 LLM few-shot prompt，单次调用完成 8 类意图识别 + 参数提取
-- **Agent 路由器**：按意图将请求分发到 4 个微 Agent（知识问答/安装指引/操作执行/故障诊断）
-- **RAG 系统**：Milvus 向量检索 + LLM 生成，自带内置知识库 fallback
-- **操作调度器**：Handler 模式，支持 CreateCluster / CreatePartition / AddInstance / ServiceLifecycle
-
-## 🚀 快速启动
-
-```bash
-# 克隆
-git clone https://github.com/Dasooul03/ai-install-assistant.git
-cd ai-install-assistant
-
-# 配置环境变量
-cp .env.example .env
-# 编辑 .env，填写 LLM_API_KEY
-
-# 启动基础设施
-docker compose up -d
-
-# 启动应用
-./gradlew bootRun
-# 浏览器访问 http://localhost:8080
-```
-
-## ⚙️ 环境变量
-
-关键变量必须通过 `.env` 文件配置：
-
-- `LLM_API_KEY` — LLM API 密钥（**必填，支持 DeepSeek / OpenAI 等兼容协议**）
-- `LLM_BASE_URL` — API 地址（默认 `https://api.deepseek.com/v1`）
-- `LLM_MODEL_NAME` — 模型名称（默认 `deepseek-chat`）
-- `SERVER_PORT` — 应用端口（默认 `8080`）
-- `MYSQL_PASSWORD` — MySQL 密码（默认 `root123`）
-
-> ⚠️ **安全提醒**：`.env` 文件已在 `.gitignore` 中排除，不会提交到 Git。切勿将 API Key 硬编码在 `application.yml` 中。
-
-## 🐳 Docker 部署
-
-```bash
-# 构建胖 JAR
-./gradlew bootJar
-
-# 生产模式运行（H2，无需 MySQL/Milvus）
-java -jar -Xmx512m build/libs/*.jar --spring.profiles.active=prod
-```
