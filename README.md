@@ -1,172 +1,415 @@
-# 智能体平台-智能安装助手
+<p align="center">
+  <img src="https://img.shields.io/badge/Java-17-ED8B00?logo=openjdk" alt="Java 17">
+  <img src="https://img.shields.io/badge/Spring%20Boot-3.5.1-6DB33F?logo=springboot" alt="Spring Boot 3.5">
+  <img src="https://img.shields.io/badge/Spring%20AI-1.1.7-6DB33F?logo=spring" alt="Spring AI 1.1">
+  <img src="https://img.shields.io/badge/LangChain4j-1.15.1-00A98F" alt="LangChain4j 1.15">
+  <img src="https://img.shields.io/badge/MCP-0.8+-7B36FF" alt="MCP">
+  <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT License">
+</p>
 
-> 基于 Spring Boot + Spring AI + LangChain4j + MCP + RAG + LLM + Milvus + MySQL  
-> 具备持续学习与自适应能力的 AI 智能体平台
+<h1 align="center">
+  🤖 AI Install Assistant<br>
+  <sub>智能安装助手</sub>
+</h1>
 
-## 架构概览
+<p align="center">
+  <strong>An enterprise-grade multi-agent platform for software installation, deployment, and operations.</strong><br>
+  <sub>面向企业级产品安装部署场景的 AI 多智能体平台</sub>
+</p>
+
+<p align="center">
+  <a href="#-features">Features</a> ·
+  <a href="#-architecture">Architecture</a> ·
+  <a href="#-quick-start">Quick Start</a> ·
+  <a href="#-api-reference">API</a> ·
+  <a href="#-project-structure">Structure</a> ·
+  <a href="#-chinese">中文</a>
+</p>
+
+---
+
+## ✨ Features
+
+| Capability | Description |
+|---|---|
+| 📚 **Knowledge Q&A** | RAG-powered question answering over installation manuals, configuration guides, and product docs — with automatic fallback to built-in knowledge when Milvus is unavailable |
+| 📖 **Installation Guide** | Step-by-step walkthrough of product installation, from prerequisites to verification |
+| ⚙️ **Automated Operations** | Create clusters, provision partitions, add service instances, start/stop/restart microservices — dispatched through LLM intent recognition |
+| 🔧 **Troubleshooting** | Symptom analysis, root-cause reasoning, and actionable remediation steps |
+| 🔗 **MCP Server** | Exposes operations as MCP tools over SSE, enabling external AI clients (Claude Desktop, Cursor, etc.) to control your infrastructure |
+| 🗂️ **Knowledge Management** | Upload text or Markdown files, persisted to MySQL + optionally indexed in Milvus |
+| 💬 **Streaming Chat** | Server-Sent Events (SSE) streaming responses with session management and conversation history |
+
+### 🤖 Multi-Agent System
+
+The platform routes each user request through **8 intent types** to **4 specialized micro-agents**:
+
+```
+KnowledgeQAAgent      → RAG retrieval + LLM generation
+InstallationGuideAgent → step-by-step installation walkthrough
+OperationAgent         → parse & execute operational commands
+DiagnosticAgent        → fault analysis & resolution advice
+```
+
+### 🧠 Intent Recognition
+
+Leverages an LLM few-shot prompt (`prompts/intent-classifier.st`) to classify user input into one of 8 intent categories with parameter extraction — all in a single LLM call. Falls back gracefully to chitchat mode.
+
+---
+
+## 🏗 Architecture
 
 ```mermaid
 graph TD
-    Client[用户/客户端] -->|SSE| ChatController
+    Client[👤 User / Client] -->|SSE| ChatController
     ChatController --> ChatService
-    ChatService --> IntentClassifier[意图分类器]
-    ChatService --> AgentRouter[Agent 路由器]
-    
-    AgentRouter --> KnowledgeQAAgent[知识问答 Agent]
-    AgentRouter --> InstallationGuideAgent[安装指引 Agent]
-    AgentRouter --> OperationAgent[操作识别 Agent]
-    AgentRouter --> DiagnosticAgent[诊断排错 Agent]
-    
-    KnowledgeQAAgent --> RAG[RAG 层]
+    ChatService --> IntentClassifier[Intent Classifier]
+    ChatService --> AgentRouter[Agent Router]
+
+    AgentRouter --> KnowledgeQAAgent[Knowledge QA Agent]
+    AgentRouter --> InstallationGuideAgent[Installation Guide Agent]
+    AgentRouter --> OperationAgent[Operation Agent]
+    AgentRouter --> DiagnosticAgent[Diagnostic Agent]
+
+    KnowledgeQAAgent --> RAG[RAG Layer]
     InstallationGuideAgent --> RAG
     DiagnosticAgent --> RAG
-    
-    RAG --> RetrievalService[检索服务]
-    RAG --> EmbeddingService[嵌入服务]
-    RetrievalService --> Milvus[(Milvus 向量库)]
+
+    RAG --> RetrievalService[Retrieval Service]
+    RAG --> EmbeddingService[Embedding Service]
+    RetrievalService --> Milvus["(Milvus Vector DB)"]
     EmbeddingService --> Milvus
-    
-    OperationAgent --> OperationDispatcher[操作调度器]
-    OperationDispatcher --> OperationHandlers[操作处理器]
-    OperationHandlers --> Backend[后端系统]
-    
-    AgentRouter --> MySQL[(MySQL)]
+
+    OperationAgent --> OperationDispatcher[Operation Dispatcher]
+    OperationDispatcher --> OperationHandlers[Operation Handlers]
+    OperationHandlers --> Backend[Backend Systems]
+
+    AgentRouter --> MySQL["(MySQL)"]
     ChatService --> MySQL
-    
-    MCPClient[MCP 客户端] -->|SSE| McpServer[MCP Server]
+
+    MCPClient[MCP Client] -->|SSE| McpServer[MCP Server]
     McpServer --> OperationDispatcher
 ```
 
-## 技术栈
+---
 
-| 组件 | 版本 | 用途 |
+## 🧰 Tech Stack
+
+| Component | Version | Purpose |
 |---|---|---|
-| JDK | 17 | 运行环境 |
-| Spring Boot | 3.5.x | 应用框架 |
-| Spring AI | 1.1.x | AI 抽象层 (Embedding, VectorStore, MCP) |
-| LangChain4j | 1.15.x | Agent 编排、Tool Router |
-| Milvus | 2.4 | 向量数据库 |
-| MySQL | 8.0 | 会话日志、知识文档元数据 |
-| MCP | 0.8+ | Model Context Protocol SSE |
-| DashScope | text-embedding-v3 | 文本向量化 |
+| **JDK** | 17 | Runtime |
+| **Spring Boot** | 3.5.1 | Application framework |
+| **Spring AI** | 1.1.7 | AI abstraction layer (Embedding, VectorStore, MCP) |
+| **LangChain4j** | 1.15.1 | Agent orchestration, Tool Router, LLM integration |
+| **Milvus** | 2.4 | Vector database for RAG |
+| **MySQL** | 8.0 | Session logs, conversation history, document metadata |
+| **H2** | embedded | Dev/test mode — zero-dependency database |
+| **MCP** | 0.8+ | Model Context Protocol (SSE transport) |
+| **DeepSeek** | deepseek-chat | LLM via OpenAI-compatible API |
+| **Docker** | 20.10+ | Infrastructure (Milvus + MySQL containers) |
+| **Gradle** | 8.12 | Build tool (wrapper included) |
 
-## 快速启动
+---
 
-### 环境要求
+## 🚀 Quick Start
 
-- JDK 17+
-- Docker & Docker Compose v2
-- Git
+### Prerequisites
 
-### 1. 克隆并配置
+- **JDK 17+**
+- **Docker & Docker Compose v2** (for Milvus + MySQL)
+- **Git**
+
+### 1. Clone & Configure
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/Dasooul03/ai-install-assistant.git
 cd ai-install-assistant
+
+# Copy the env template
 cp .env.example .env
-# 编辑 .env 填写 API Key
+
+# Edit .env — at minimum, set your LLM_API_KEY
+# Supports any OpenAI-compatible provider (DeepSeek, OpenAI, etc.)
 ```
 
-### 2. 启动基础设施
+### 2. Start Infrastructure
 
 ```bash
 docker compose up -d
-# 等待 Milvus (19530) 和 MySQL (3306) 就绪
+# Wait for Milvus (:19530) and MySQL (:3306) to be ready
 ```
 
-### 3. 启动应用
+### 3. Run the Application
 
 ```bash
+# Development mode (MySQL + DevTools hot-reload)
 ./gradlew bootRun
+
+# or Production mode (H2 file DB, no DevTools)
+./gradlew bootRun --args='--spring.profiles.active=prod'
 ```
 
-### 4. 导入示例知识库
+Visit **http://localhost:8080** to open the chat UI.
+
+### 4. Upload Knowledge (optional)
 
 ```bash
-# Windows (PowerShell)
-# 手动调用 API:
+# Upload text content
 curl -X POST http://localhost:8080/api/knowledge/upload/text \
   -H "Content-Type: application/json" \
-  -d '{"content":"## 安装准备\n需要 JDK 17+","fileName":"安装手册.md","docType":"MANUAL"}'
+  -d '{"content":"## Installation Prep\nRequires JDK 17+","fileName":"setup.md","docType":"MANUAL"}'
+
+# Upload a file
+curl -X POST http://localhost:8080/api/knowledge/upload/file \
+  -F "file=@knowledge-base.md" \
+  -F "docType=MANUAL"
 ```
 
-### 5. 测试对话
+### 5. Test the Chat
 
 ```bash
-# 同步接口
+# Synchronous
 curl -X POST http://localhost:8080/api/chat/sync \
   -H "Content-Type: application/json" \
-  -d '{"message":"如何安装？","sessionId":null}'
+  -d '{"message":"How do I install this?","sessionId":null}'
 
-# SSE 流式接口
+# SSE streaming
 curl -X POST http://localhost:8080/api/chat \
   -H "Content-Type: application/json" \
-  -d '{"message":"帮我创建一个3节点集群"}'
+  -d '{"message":"Create a 3-node cluster"}'
 ```
 
-## API 文档
+---
 
-### 聊天接口
+## 🔌 API Reference
 
-| 方法 | 路径 | 说明 |
+Base URL: `http://localhost:8080`
+
+### Chat
+
+| Method | Path | Description |
 |---|---|---|
-| POST | `/api/chat` | SSE 流式对话 |
-| POST | `/api/chat/sync` | 同步对话 |
-| GET | `/api/sessions` | 会话列表 |
-| POST | `/api/sessions` | 创建新会话 |
-| GET | `/api/sessions/{id}/history` | 会话历史 |
+| `POST` | `/api/chat` | SSE streaming chat |
+| `POST` | `/api/chat/sync` | Synchronous chat (returns JSON) |
+| `GET` | `/api/sessions` | List active sessions |
+| `POST` | `/api/sessions` | Create a new session |
+| `GET` | `/api/sessions/{id}/history` | Get session conversation history |
 
-### 知识库接口
+### Knowledge Base
 
-| 方法 | 路径 | 说明 |
+| Method | Path | Description |
 |---|---|---|
-| POST | `/api/knowledge/upload/text` | 上传文本 |
-| POST | `/api/knowledge/upload/file` | 上传文件 (multipart) |
-| DELETE | `/api/knowledge/{id}` | 删除文档 |
-| GET | `/api/knowledge/list` | 文档列表 |
+| `POST` | `/api/knowledge/upload/text` | Upload text content (JSON body) |
+| `POST` | `/api/knowledge/upload/file` | Upload file (multipart, `.md` / `.txt`) |
+| `DELETE` | `/api/knowledge/{id}` | Delete a document |
+| `GET` | `/api/knowledge/list` | List all documents |
 
-### MCP 接口
+### MCP
 
-| 方法 | 路径 | 说明 |
+| Method | Path | Description |
 |---|---|---|
-| GET/POST | `/mcp/sse` | MCP SSE endpoint |
+| `GET` / `POST` | `/mcp/sse` | MCP Server SSE endpoint — exposes `createCluster`, `createPartition`, `addInstance`, `manageService` tools |
 
-## 项目结构
+### Health
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/actuator/health` | Health check |
+| `GET` | `/api` | API index (lists all endpoints) |
+
+---
+
+## 📂 Project Structure
 
 ```
 src/main/java/com/example/installassistant/
-├── agent/          # 多智能体 (Router + 4个微Agent)
-├── config/         # Spring 配置 (AI/Milvus/MCP)
-├── controller/     # REST 控制器
-├── intent/         # 意图识别 (8 种意图)
-├── model/          # JPA Entity (4 个)
-├── operation/      # 操作调度 (4 个Handler)
-├── rag/            # RAG 系统 (Loader/Embed/Retrieve)
-├── repository/     # Spring Data JPA
-└── service/        # 业务服务
+├── agent/               # Multi-agent system (Router + 4 micro-agents)
+│   ├── AgentRouter.java
+│   ├── KnowledgeQAAgent.java
+│   ├── InstallationGuideAgent.java
+│   ├── OperationAgent.java
+│   └── DiagnosticAgent.java
+├── config/              # Spring configuration (AI / Milvus / MCP)
+│   ├── AiConfig.java
+│   ├── MilvusConfig.java
+│   └── McpConfig.java
+├── controller/          # REST controllers
+│   ├── ChatController.java
+│   ├── IndexController.java
+│   └── KnowledgeController.java
+├── intent/              # Intent recognition (8 types)
+│   ├── IntentType.java
+│   ├── IntentResult.java
+│   └── IntentClassifier.java
+├── model/               # JPA entities
+│   ├── Session.java
+│   ├── ConversationMessage.java
+│   ├── OperationLog.java
+│   └── KnowledgeDocument.java
+├── operation/           # Operation dispatcher + handlers
+│   ├── OperationHandler.java
+│   ├── OperationDispatcher.java
+│   ├── CreateClusterHandler.java
+│   ├── CreatePartitionHandler.java
+│   ├── AddInstanceHandler.java
+│   └── ServiceLifecycleHandler.java
+├── rag/                 # RAG system (Load / Embed / Retrieve)
+│   ├── DocumentLoader.java
+│   ├── EmbeddingService.java
+│   ├── RetrievalService.java
+│   ├── PromptBuilder.java
+│   └── KnowledgeService.java
+├── repository/          # Spring Data JPA repositories
+├── service/             # Business services
+│   ├── ChatService.java
+│   ├── SessionService.java
+│   └── ConversationHistoryService.java
+└── AiInstallAssistantApplication.java
 ```
 
-## 测试
+---
+
+## ⚙️ Configuration
+
+All settings are driven by environment variables. Copy `.env.example` to `.env` and fill in your values.
+
+| Variable | Default | Description |
+|---|---|---|
+| `LLM_API_KEY` | *(required)* | API key for the LLM (OpenAI-compatible) |
+| `LLM_BASE_URL` | `https://api.deepseek.com/v1` | LLM API base URL |
+| `LLM_MODEL_NAME` | `deepseek-chat` | Model name |
+| `SERVER_PORT` | `8080` | Application port |
+| `LOG_LEVEL` | `INFO` | Root log level |
+| `MYSQL_HOST` | `localhost` | MySQL host |
+| `MYSQL_PORT` | `3306` | MySQL port |
+| `MYSQL_DATABASE` | `install_assistant` | MySQL database name |
+| `MYSQL_USERNAME` | `root` | MySQL username |
+| `MYSQL_PASSWORD` | `root123` | MySQL password |
+| `MILVUS_HOST` | `localhost` | Milvus host |
+| `MILVUS_PORT` | `19530` | Milvus port |
+
+### Profiles
+
+| Profile | Database | DevTools | Logging | Use case |
+|---|---|---|---|---|
+| `default` (no profile) | MySQL | Enabled | DEBUG | Local development |
+| `prod` | H2 file | Disabled | INFO | Production deployment |
+| `h2` | H2 file | Enabled | DEBUG | Quick local testing without Docker |
+
+---
+
+## 🧪 Testing
 
 ```bash
-# 运行所有测试
+# Run all tests
 ./gradlew test
 
-# 跳过集成测试（不需要 Docker）
-./gradlew test -x integrationTest
+# Run a specific test class
+./gradlew test --tests "com.example.installassistant.intent.IntentClassifierTest"
+
+# Build without tests
+./gradlew build -x test
 ```
 
-## 环境变量
+---
 
-| 变量 | 默认值 | 说明 |
-|---|---|---|
-| LLM_API_KEY | - | LLM API Key (OpenAI 兼容) |
-| LLM_BASE_URL | https://api.openai.com/v1 | LLM 接口地址 |
-| LLM_MODEL_NAME | gpt-4o-mini | 聊天模型名称 |
-| DASHSCOPE_API_KEY | - | 阿里 DashScope Key |
-| MILVUS_HOST | localhost | Milvus 地址 |
-| MYSQL_PASSWORD | root123 | MySQL 密码 |
+## 🐳 Deployment
 
-## License
+### As a Standalone JAR
 
-MIT
+```bash
+# Build the fat JAR
+./gradlew bootJar
+
+# Run with production profile
+java -jar -Xmx512m build/libs/ai-install-assistant-0.1.0-SNAPSHOT.jar \
+  --spring.profiles.active=prod
+```
+
+### Via Docker (multi-stage build)
+
+```bash
+# Build the image
+docker build -t ai-install-assistant .
+
+# Run
+docker run -p 8080:8080 --env-file .env ai-install-assistant
+```
+
+A pre-built base knowledge document (`base-knowledge.md`) is embedded in the JAR — the application works out-of-the-box even without Milvus or a MySQL connection.
+
+---
+
+## 📄 License
+
+MIT © 2025 Dasooul03
+
+---
+
+<p align="center">
+  <sub>Made with ☕ and 🤖</sub>
+</p>
+
+---
+
+<h2 id="-chinese" align="center">📝 中文说明</h2>
+
+## ✨ 核心能力
+
+| 能力 | 说明 |
+|---|---|
+| 📚 **知识问答** | RAG 检索增强生成，基于安装手册/配置指南/产品文档回答用户问题；Milvus 不可用时自动回退到内置知识库 |
+| 📖 **安装指引** | 分步骤引导完成产品安装部署流程 |
+| ⚙️ **自动化操作** | 创建集群、划分分区、增减实例、微服务启停 — 全通过 LLM 意图识别驱动 |
+| 🔧 **故障诊断** | 问题分析、根因推断、可操作的排查建议 |
+| 🔗 **MCP Server** | 通过 SSE 将运维操作暴露为 MCP 工具，外部 AI 客户端可直接调用 |
+| 🗂️ **知识库管理** | 上传文本/Markdown 文件，持久化到 MySQL 并可选索引到 Milvus |
+| 💬 **流式对话** | SSE 流式输出，支持会话管理和对话历史 |
+
+## 🧠 技术架构
+
+- **意图分类器**：基于 LLM few-shot prompt，单次调用完成 8 类意图识别 + 参数提取
+- **Agent 路由器**：按意图将请求分发到 4 个微 Agent（知识问答/安装指引/操作执行/故障诊断）
+- **RAG 系统**：Milvus 向量检索 + LLM 生成，自带内置知识库 fallback
+- **操作调度器**：Handler 模式，支持 CreateCluster / CreatePartition / AddInstance / ServiceLifecycle
+
+## 🚀 快速启动
+
+```bash
+# 克隆
+git clone https://github.com/Dasooul03/ai-install-assistant.git
+cd ai-install-assistant
+
+# 配置环境变量
+cp .env.example .env
+# 编辑 .env，填写 LLM_API_KEY
+
+# 启动基础设施
+docker compose up -d
+
+# 启动应用
+./gradlew bootRun
+# 浏览器访问 http://localhost:8080
+```
+
+## ⚙️ 环境变量
+
+关键变量必须通过 `.env` 文件配置：
+
+- `LLM_API_KEY` — LLM API 密钥（**必填，支持 DeepSeek / OpenAI 等兼容协议**）
+- `LLM_BASE_URL` — API 地址（默认 `https://api.deepseek.com/v1`）
+- `LLM_MODEL_NAME` — 模型名称（默认 `deepseek-chat`）
+- `SERVER_PORT` — 应用端口（默认 `8080`）
+- `MYSQL_PASSWORD` — MySQL 密码（默认 `root123`）
+
+> ⚠️ **安全提醒**：`.env` 文件已在 `.gitignore` 中排除，不会提交到 Git。切勿将 API Key 硬编码在 `application.yml` 中。
+
+## 🐳 Docker 部署
+
+```bash
+# 构建胖 JAR
+./gradlew bootJar
+
+# 生产模式运行（H2，无需 MySQL/Milvus）
+java -jar -Xmx512m build/libs/*.jar --spring.profiles.active=prod
+```
